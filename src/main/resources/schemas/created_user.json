@@ -1,0 +1,16 @@
+{
+    "type": "object",
+    "required": ["_id", "currency_code", "email", "name", "password_change", "password_repeat", "surname", "username", "__v"],
+    "properties": {
+      "_id": { "type": "string" },
+      "currency_code": { "type": "string" },
+      "email": { "type": "string", "format": "email" },
+      "name": { "type": "string" },
+      "password_change": { "type":  "string" },
+      "password_repeat": { "type":  "string" },
+      "surname": { "type": "string" },
+      "username": { "type": "string" },
+      "__v": { "type": "integer" }
+    },
+    "additionalProperties": false
+}

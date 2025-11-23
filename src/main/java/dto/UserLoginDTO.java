@@ -1,10 +1,10 @@
 package dto;
 
-public class UserLoginDto {
+public class UserLoginDTO {
     public String email;
     public String password;
 
-    public UserLoginDto(String email, String password) {
+    public UserLoginDTO(String email, String password) {
         this.email = email;
         this.password = password;
     }

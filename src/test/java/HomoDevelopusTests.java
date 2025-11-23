@@ -1,38 +1,100 @@
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dto.UserLoginDto;
-import io.restassured.RestAssured;
+import dto.PlayerResponseDTO;
+import dto.UserLoginDTO;
+import factory.PlayerRequestFactory;
+import io.qameta.allure.Description;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
 
-import static io.restassured.RestAssured.authentication;
-import static io.restassured.RestAssured.given;
+import java.util.ArrayList;
+import java.util.List;
+
+import static io.qameta.allure.Allure.step;
+import static io.restassured.RestAssured.*;
+import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static utils.Constants.BASE_API_URL;
 
 @Tag("API")
+@Tag("HomoDevelopus")
 public class HomoDevelopusTests {
 
     @BeforeAll
     static void setUpClass() {
-        authentication = RestAssured.preemptive().basic("test91", "oiwSMUmQo9uuuyc9KITwH");
+        baseURI = BASE_API_URL;
+        var userLoginDto = new UserLoginDTO("nikit1534@gmail.com", "Wq5MPEmi83A5");
+
+        var userBearerToken =
+                given()
+                    .contentType(ContentType.JSON)
+                    .body(userLoginDto)
+                .when()
+                    .post("/tester/login")
+                .then()
+                    .statusCode(201)
+                    .body("accessToken",
+                        allOf(notNullValue(),
+                                instanceOf(String.class),
+                                not(emptyString())))
+                    .extract()
+                    .path("accessToken")
+                    .toString();
+
+        requestSpecification = new RequestSpecBuilder()
+                .setBaseUri(BASE_API_URL)
+                .setContentType(ContentType.JSON)
+                .addHeader("Authorization", "Bearer " + userBearerToken)
+                .build();
     }
 
     @Test
-    void getUserLoginTest() throws JsonProcessingException {
-        var userLoginDto = new UserLoginDto("nikit1534@gmail.com", "Wq5MPEmi83A5");
-        var userLoginRequestBody = new ObjectMapper().writeValueAsString(userLoginDto);
+    @DisplayName("Registration of new users and deleting created ones")
+    @Description("Verify that 12 users are created, each user matches specification " +
+            "and then all previously created users are deleted correctly")
+    void usersRegistrationAndDeletionTest() {
+        var newPlayersQuantity = 12;
+        var playersList = PlayerRequestFactory.createPlayersList(newPlayersQuantity);
+        var playersIdList = new ArrayList<String>();
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(userLoginRequestBody)
-        .when()
-                .post(BASE_API_URL + "/tester/login")
-        .then()
-                .statusCode(201)
-                .body("accessToken",
-                        allOf(notNullValue(),
-                        instanceOf(String.class),
-                        not(emptyString())));
+        step("1. Create " + newPlayersQuantity + " new users", () -> {
+            playersList.forEach(player -> {
+                var playerId =
+                        given()
+                            .body(player)
+                            .when()
+                            .post("/automationTask/create")
+                            .then()
+                            .statusCode(201)
+                            .body(matchesJsonSchemaInClasspath("schemas/created_user.json"))
+                            .extract()
+                            .jsonPath()
+                            .getString("_id");
+
+                playersIdList.add(playerId);
+            });
+        });
+
+        step("2. Delete each created user and verify that the list of players created by the current user is empty", () -> {
+            playersIdList.forEach(id ->
+                    given()
+                        .when()
+                        .delete("/automationTask/deleteOne/" + id)
+                        .then()
+                        .statusCode(200)
+            );
+
+            var getAllUsersList =
+                    given()
+                        .when()
+                        .get("/automationTask/getAll")
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .as(new TypeRef<List<PlayerResponseDTO>>() {});
+
+            assertTrue(getAllUsersList.isEmpty(), "There are no users created by a current user");
+        });
     }
 }
