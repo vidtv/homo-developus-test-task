@@ -7,4 +7,8 @@ public class PlayerResponseDTO {
     public String name;
     public String surname;
     public String username;
+
+    public String getName() {
+        return name;
+    }
 }

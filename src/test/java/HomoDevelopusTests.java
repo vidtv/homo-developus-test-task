@@ -7,8 +7,7 @@ import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.*;
@@ -20,7 +19,6 @@ import static utils.Constants.BASE_API_URL;
 @Tag("API")
 @Tag("HomoDevelopus")
 public class HomoDevelopusTests {
-    private String userEmailToRequest;
 
     @BeforeAll
     static void setUpClass() {
@@ -51,15 +49,13 @@ public class HomoDevelopusTests {
     }
 
     @Test
-    @DisplayName("Registration of new users and deleting created ones")
+    @DisplayName("Registration of new users, sorting users list and deleting created users")
     @Description("Verify that 12 users are created, each user matches specification " +
             "and then all previously created users are deleted correctly")
     void usersRegistrationAndDeletionTest() {
         var newPlayersQuantity = 12;
         var playersList = PlayerRequestFactory.createPlayersList(newPlayersQuantity);
         var playersIdList = new ArrayList<String>();
-
-        userEmailToRequest = playersList.get(0).email;
 
         step("1. Create " + newPlayersQuantity + " new users and verify that response matches specification", () -> {
             playersList.forEach(player -> {
@@ -80,6 +76,8 @@ public class HomoDevelopusTests {
         });
 
         step("2. Retrieve one of users by its email and verify that response matches specification", () -> {
+            var userEmailToRequest = playersList.get(0).email;
+
             given()
                     .body("{\"email\": \"" + userEmailToRequest + "\"}")
                     .when()
@@ -89,7 +87,23 @@ public class HomoDevelopusTests {
                     .body(matchesJsonSchemaInClasspath("schemas/existing_user.json"));
         });
 
-        step("3. Delete each created user and verify that the list of players created by the current user is empty", () -> {
+        step("3. Retrieve list of all created users and sort them by their 'name' field values", () -> {
+            var allUsersList =
+                    given()
+                            .when()
+                            .get("/automationTask/getAll")
+                            .then()
+                            .statusCode(200)
+                            .extract()
+                            .as(new TypeRef<List<PlayerResponseDTO>>() {});
+
+            var allUsersSortedList = allUsersList
+                    .stream()
+                    .sorted(Comparator.comparing(PlayerResponseDTO::getName))
+                    .toList();
+        });
+
+        step("4. Delete each created user and verify that the list of players created by the current user is empty", () -> {
             playersIdList.forEach(id ->
                     given()
                         .when()
