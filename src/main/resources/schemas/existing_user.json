@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "required": ["id", "currency_code", "email", "name", "surname", "username"],
+  "properties": {
+    "id": { "type": "string" },
+    "currency_code": { "type": "string" },
+    "email": { "type": "string", "format": "email" },
+    "name": { "type": "string" },
+    "surname": { "type": "string" },
+    "username": { "type": "string" }
+  },
+  "additionalProperties": false
+}

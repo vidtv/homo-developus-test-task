@@ -20,6 +20,7 @@ import static utils.Constants.BASE_API_URL;
 @Tag("API")
 @Tag("HomoDevelopus")
 public class HomoDevelopusTests {
+    private String userEmailToRequest;
 
     @BeforeAll
     static void setUpClass() {
@@ -58,7 +59,9 @@ public class HomoDevelopusTests {
         var playersList = PlayerRequestFactory.createPlayersList(newPlayersQuantity);
         var playersIdList = new ArrayList<String>();
 
-        step("1. Create " + newPlayersQuantity + " new users", () -> {
+        userEmailToRequest = playersList.get(0).email;
+
+        step("1. Create " + newPlayersQuantity + " new users and verify that response matches specification", () -> {
             playersList.forEach(player -> {
                 var playerId =
                         given()
@@ -76,7 +79,17 @@ public class HomoDevelopusTests {
             });
         });
 
-        step("2. Delete each created user and verify that the list of players created by the current user is empty", () -> {
+        step("2. Retrieve one of users by its email and verify that response matches specification", () -> {
+            given()
+                    .body("{\"email\": \"" + userEmailToRequest + "\"}")
+                    .when()
+                    .post("/automationTask/getOne")
+                    .then()
+                    .statusCode(201)
+                    .body(matchesJsonSchemaInClasspath("schemas/existing_user.json"));
+        });
+
+        step("3. Delete each created user and verify that the list of players created by the current user is empty", () -> {
             playersIdList.forEach(id ->
                     given()
                         .when()
