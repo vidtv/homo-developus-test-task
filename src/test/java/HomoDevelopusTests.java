@@ -15,6 +15,8 @@ import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInC
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static utils.Constants.BASE_API_URL;
+import static utils.Credentials.getEmail;
+import static utils.Credentials.getPassword;
 
 @Tag("API")
 @Tag("HomoDevelopus")
@@ -23,7 +25,7 @@ public class HomoDevelopusTests {
     @BeforeAll
     static void setUpClass() {
         baseURI = BASE_API_URL;
-        var userLoginDto = new UserLoginDTO("nikit1534@gmail.com", "Wq5MPEmi83A5");
+        var userLoginDto = new UserLoginDTO(getEmail(), getPassword());
 
         var userBearerToken =
                 given()
@@ -88,14 +90,7 @@ public class HomoDevelopusTests {
         });
 
         step("3. Retrieve list of all created users and sort them by their 'name' field values", () -> {
-            var allUsersList =
-                    given()
-                            .when()
-                            .get("/automationTask/getAll")
-                            .then()
-                            .statusCode(200)
-                            .extract()
-                            .as(new TypeRef<List<PlayerResponseDTO>>() {});
+            var allUsersList = getAllUsersList();
 
             var allUsersSortedList = allUsersList
                     .stream()
@@ -112,16 +107,24 @@ public class HomoDevelopusTests {
                         .statusCode(200)
             );
 
-            var getAllUsersList =
-                    given()
-                        .when()
-                        .get("/automationTask/getAll")
-                        .then()
-                        .statusCode(200)
-                        .extract()
-                        .as(new TypeRef<List<PlayerResponseDTO>>() {});
+            var allUsersList = getAllUsersList();
 
-            assertTrue(getAllUsersList.isEmpty(), "There are no users created by a current user");
+            assertTrue(allUsersList.isEmpty(), "There are no users created by a current user");
         });
+    }
+
+    /**
+     * Helpers method to get list of all users created by the current user.
+     *
+     * @return list of PlayerResponseDTO objects
+     */
+    private List<PlayerResponseDTO> getAllUsersList() {
+        return given()
+                .when()
+                .get("/automationTask/getAll")
+                .then()
+                .statusCode(200)
+                .extract()
+                .as(new TypeRef<>() {});
     }
 }

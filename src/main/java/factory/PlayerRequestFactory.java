@@ -5,6 +5,9 @@ import dto.PlayerRequestDTO;
 import java.util.*;
 import java.util.stream.IntStream;
 
+/**
+ * Factory class for creating PlayerRequestDTO objects for testing purposes.
+ */
 public class PlayerRequestFactory {
 
     private static PlayerRequestDTO createPlayer(int index) {

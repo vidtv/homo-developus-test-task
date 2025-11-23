@@ -1,5 +1,8 @@
 package dto;
 
+/**
+ * DTO class for creating a new player via the Homo Developus test API.
+ */
 public class PlayerRequestDTO {
     public String currency_code;
     public String email;
