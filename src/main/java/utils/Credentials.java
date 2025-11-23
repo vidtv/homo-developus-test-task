@@ -1,5 +1,8 @@
 package utils;
 
+/**
+ * Utility class for managing user credentials.
+ */
 public class Credentials {
     private final static String DEFAULT_EMAIL = "nikit1534@gmail.com";
     private final static String DEFAULT_PASSWORD = "Wq5MPEmi83A5";
