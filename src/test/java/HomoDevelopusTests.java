@@ -57,7 +57,7 @@ public class HomoDevelopusTests {
     void usersRegistrationAndDeletionTest() {
         var newPlayersQuantity = 12;
         var playersList = PlayerRequestFactory.createPlayersList(newPlayersQuantity);
-        var playersIdList = new ArrayList<String>();
+        var playersIdListToDelete = new ArrayList<String>();
 
         step("1. Create " + newPlayersQuantity + " new users and verify that response matches specification", () -> {
             playersList.forEach(player -> {
@@ -73,7 +73,7 @@ public class HomoDevelopusTests {
                             .jsonPath()
                             .getString("_id");
 
-                playersIdList.add(playerId);
+                playersIdListToDelete.add(playerId);
             });
         });
 
@@ -99,7 +99,7 @@ public class HomoDevelopusTests {
         });
 
         step("4. Delete each created user and verify that the list of players created by the current user is empty", () -> {
-            playersIdList.forEach(id ->
+            playersIdListToDelete.forEach(id ->
                     given()
                         .when()
                         .delete("/automationTask/deleteOne/" + id)
